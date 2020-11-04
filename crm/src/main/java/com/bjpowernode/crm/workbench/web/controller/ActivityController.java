@@ -9,8 +9,10 @@ import com.bjpowernode.crm.utils.ServiceFactory;
 import com.bjpowernode.crm.utils.UUIDUtil;
 import com.bjpowernode.crm.vo.PaginationVo;
 import com.bjpowernode.crm.workbench.domain.Activity;
+import com.bjpowernode.crm.workbench.domain.ActivityRemark;
 import com.bjpowernode.crm.workbench.service.ActivityService;
 import com.bjpowernode.crm.workbench.service.impl.ActivityServiceImpl;
+import com.sun.org.apache.xpath.internal.operations.Bool;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -40,7 +42,179 @@ public class ActivityController extends HttpServlet{
 
             pageList(request,response);
 
+        }else if("/workbench/activity/delete.do".equals(path)){
+
+            delete(request,response);
+
+        }else if("/workbench/activity/getUserListAndActivity.do".equals(path)){
+
+            getUserListAndActivity(request,response);
+
+        }else if("/workbench/activity/update.do".equals(path)){
+
+            update(request,response);
+
+        }else if("/workbench/activity/detail.do".equals(path)){
+
+            detail(request,response);
+
+        }else if("/workbench/activity/getRemarkListByAid.do".equals(path)){
+
+            getRemarkListByAid(request,response);
+
+        }else if("/workbench/activity/deleteRemark.do".equals(path)){
+
+            deleteRemark(request,response);
+
+        }else if("/workbench/activity/saveRemark.do".equals(path)){
+
+            saveRemark(request,response);
+
+        }else if("/workbench/activity/updateRemark.do".equals(path)){
+
+            updateRemark(request,response);
+
         }
+    }
+
+    private void updateRemark(HttpServletRequest request, HttpServletResponse response) {
+
+        System.out.println("执行更新备注操作");
+
+        String id = request.getParameter("id");
+        String noteContent = request.getParameter("noteContent");
+        String editTime = DateTimeUtil.getSysTime();
+        String editBy = ((User)request.getSession().getAttribute("user")).getName();
+        String editFlag = "1";
+
+        ActivityRemark ar = new ActivityRemark();
+        ar.setId(id);
+        ar.setNoteContent(noteContent);
+        ar.setEditTime(editTime);
+        ar.setEditBy(editBy);
+        ar.setEditFlag(editFlag);
+
+        ActivityService activityService = (ActivityService) ServiceFactory.getService(new ActivityServiceImpl());
+        boolean flag = activityService.updateRemark(ar);
+
+        Map<String, Object> map = new HashMap<String, Object>();
+        map.put("success", flag);
+        map.put("ar", ar);
+        PrintJson.printJsonObj(response, map);
+    }
+
+    private void saveRemark(HttpServletRequest request, HttpServletResponse response) {
+
+        System.out.println("执行新建备注操作");
+
+        String activityId = request.getParameter("aid");
+        String noteContent = request.getParameter("noteContent");
+        String id = UUIDUtil.getUUID();
+        String createTime = DateTimeUtil.getSysTime();
+        String createBy = ((User)request.getSession().getAttribute("user")).getName();
+        String editFlag = "0";
+
+        ActivityRemark ar = new ActivityRemark();
+        ar.setId(id);
+        ar.setNoteContent(noteContent);
+        ar.setCreateTime(createTime);
+        ar.setCreateBy(createBy);
+        ar.setEditFlag(editFlag);
+        ar.setActivityId(activityId);
+
+        ActivityService activityService = (ActivityService) ServiceFactory.getService(new ActivityServiceImpl());
+        boolean flag = activityService.saveRemark(ar);
+
+        Map<String, Object> map = new HashMap<String, Object>();
+        map.put("success", flag);
+        map.put("ar", ar);
+        PrintJson.printJsonObj(response, map);
+    }
+
+    private void deleteRemark(HttpServletRequest request, HttpServletResponse response) {
+
+        System.out.println("通过备注id执行删除备注操作");
+
+        String id = request.getParameter("id");
+        ActivityService activityService = (ActivityService) ServiceFactory.getService(new ActivityServiceImpl());
+        Boolean success = activityService.deleteRemark(id);
+        PrintJson.printJsonFlag(response, success);
+    }
+
+    private void getRemarkListByAid(HttpServletRequest request, HttpServletResponse response) {
+
+        System.out.println("进入通过活动id查询备注信息控制器");
+
+        String aid = request.getParameter("aid");
+        ActivityService activityService = (ActivityService) new ServiceFactory().getService(new ActivityServiceImpl());
+        List<ActivityRemark> rList = activityService.getRemarkListByAid(aid);
+
+        PrintJson.printJsonObj(response, rList);
+    }
+
+    private void detail(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+
+        System.out.println("跳转到详细信息页界面");
+
+        String id = request.getParameter("id");
+        ActivityService activityService = (ActivityService) new ServiceFactory().getService(new ActivityServiceImpl());
+        Activity activity = activityService.detail(id);
+        request.setAttribute("activity", activity);
+        request.getRequestDispatcher("/workbench/activity/detail.jsp").forward(request,response);
+    }
+
+    private void update(HttpServletRequest request, HttpServletResponse response) {
+
+        System.out.println("进入更新市场活动信息控制器");
+
+        ActivityService activityService = (ActivityService) ServiceFactory.getService(new ActivityServiceImpl());
+
+        String id = request.getParameter("id");
+        String owner = request.getParameter("owner");
+        String name = request.getParameter("name");
+        String startDate = request.getParameter("startDate");
+        String endDate = request.getParameter("endDate");
+        String cost = request.getParameter("cost");
+        String description = request.getParameter("description");
+        String editTime = DateTimeUtil.getSysTime();
+        String editBy = ((User) request.getSession().getAttribute("user")).getName();
+
+        Activity a = new Activity();
+        a.setId(id);
+        a.setCost(cost);
+        a.setStartDate(startDate);
+        a.setOwner(owner);
+        a.setName(name);
+        a.setEndDate(endDate);
+        a.setEditTime(editTime);
+        a.setEditBy(editTime);
+        a.setDescription(description);
+
+        Boolean success = activityService.update(a);
+
+        PrintJson.printJsonFlag(response, success);
+    }
+
+    private void getUserListAndActivity(HttpServletRequest request, HttpServletResponse response) {
+
+        System.out.println("进入获取用户列表和根据id获取单条市场活动控制器");
+
+        String id = request.getParameter("id");
+
+        ActivityService activityService = (ActivityService) ServiceFactory.getService(new ActivityServiceImpl());
+        Map<String, Object> map = activityService.getUserListAndActivity(id);
+        PrintJson.printJsonObj(response, map);
+    }
+
+
+    private void delete(HttpServletRequest request, HttpServletResponse response) {
+
+        System.out.println("进入删除市场活动控制器");
+
+        String[] ids= request.getParameterValues("id");
+        ActivityService activityService = (ActivityService) ServiceFactory.getService(new ActivityServiceImpl());
+        Boolean success = activityService.delete(ids);
+        PrintJson.printJsonFlag(response,success);
     }
 
     private void pageList(HttpServletRequest request, HttpServletResponse response) {
@@ -79,12 +253,12 @@ public class ActivityController extends HttpServlet{
         ActivityService activityService = (ActivityService) ServiceFactory.getService(new ActivityServiceImpl());
 
         String id = UUIDUtil.getUUID();
-        String owner = (String) request.getParameter("owner");
-        String name = (String) request.getParameter("name");
-        String startDate = (String) request.getParameter("startDate");
-        String endDate = (String) request.getParameter("endDate");
-        String cost = (String) request.getParameter("cost");
-        String description = (String) request.getParameter("description");
+        String owner = request.getParameter("owner");
+        String name = request.getParameter("name");
+        String startDate = request.getParameter("startDate");
+        String endDate = request.getParameter("endDate");
+        String cost = request.getParameter("cost");
+        String description = request.getParameter("description");
         String createTime = DateTimeUtil.getSysTime();
         String createBy = ((User) request.getSession().getAttribute("user")).getName();
 
