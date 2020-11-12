@@ -160,7 +160,7 @@ public class ActivityController extends HttpServlet{
         ActivityService activityService = (ActivityService) new ServiceFactory().getService(new ActivityServiceImpl());
         Activity activity = activityService.detail(id);
         request.setAttribute("activity", activity);
-        request.getRequestDispatcher("/workbench/activity/detail.jsp").forward(request,response);
+        request.getRequestDispatcher("/workbench/activity/detail.jsp").forward(request, response);
     }
 
     private void update(HttpServletRequest request, HttpServletResponse response) {

@@ -33,8 +33,8 @@ public class SysInitListener implements ServletContextListener {
         //将map解析为上下文域对象中保存的键值对
         Set<String> set = map.keySet();
         for (String key : set){
-            application.setAttribute(key, map.get(key));
 
+            application.setAttribute(key, map.get(key));
         }
 
         System.out.println("服务器缓存处理数据字典结束");

@@ -3,11 +3,14 @@ package com.bjpowernode.crm.workbench.service.impl;
 import com.bjpowernode.crm.settings.dao.UserDao;
 import com.bjpowernode.crm.settings.domain.User;
 import com.bjpowernode.crm.utils.SqlSessionUtil;
+import com.bjpowernode.crm.utils.UUIDUtil;
 import com.bjpowernode.crm.vo.PaginationVo;
 import com.bjpowernode.crm.workbench.dao.ActivityDao;
 import com.bjpowernode.crm.workbench.dao.ActivityRemarkDao;
+import com.bjpowernode.crm.workbench.dao.ClueActivityRelationDao;
 import com.bjpowernode.crm.workbench.domain.Activity;
 import com.bjpowernode.crm.workbench.domain.ActivityRemark;
+import com.bjpowernode.crm.workbench.domain.ClueActivityRelation;
 import com.bjpowernode.crm.workbench.service.ActivityService;
 
 import java.util.HashMap;
@@ -19,6 +22,7 @@ public class ActivityServiceImpl implements ActivityService {
     private ActivityDao activityDao = SqlSessionUtil.getSqlSession().getMapper(ActivityDao.class);
     private ActivityRemarkDao activityRemarkDao = SqlSessionUtil.getSqlSession().getMapper(ActivityRemarkDao.class);
     private UserDao userDao = SqlSessionUtil.getSqlSession().getMapper(UserDao.class);
+    private ClueActivityRelationDao clueActivityRelationDao = SqlSessionUtil.getSqlSession().getMapper(ClueActivityRelationDao.class);
 
     public Map<String, Object> getUserListAndActivity(String id) {
         Map<String, Object> map = new HashMap<String, Object>();
@@ -93,6 +97,58 @@ public class ActivityServiceImpl implements ActivityService {
             flag = false;
         }
         return flag;
+    }
+
+    public List<Activity> getActivityListByClueId(String cId) {
+
+        List<Activity> aList = activityDao.getActivityListByClueId(cId);
+        return aList;
+    }
+
+    public boolean deleteActivityByCarId(String id) {
+
+        boolean flag = true;
+        int count = clueActivityRelationDao.deleteActivityByCarId(id);
+
+        if (count != 1){
+
+            flag = false;
+        }
+
+        return flag;
+    }
+
+    public List<Activity> getActivityListByNameAndNotByClueId(Map<String, String> map) {
+
+        List<Activity> aList = activityDao.getActivityListByNameAndNotByClueId(map);
+        return aList;
+    }
+
+    public boolean bund(String cId, String[] aIds) {
+
+        boolean flag = true;
+
+        for (String aId : aIds){
+
+            ClueActivityRelation clueActivityRelation = new ClueActivityRelation();
+            clueActivityRelation.setId(UUIDUtil.getUUID());
+            clueActivityRelation.setActivityId(aId);
+            clueActivityRelation.setClueId(cId);
+
+            int count = clueActivityRelationDao.bund(clueActivityRelation);
+            if (count != 1){
+
+                flag = false;
+            }
+        }
+
+        return flag;
+    }
+
+    public List<Activity> getActivityListByName(String aname) {
+
+        List<Activity> aList = activityDao.getActivityListByName(aname);
+        return aList;
     }
 
     public Boolean delete(String[] ids) {

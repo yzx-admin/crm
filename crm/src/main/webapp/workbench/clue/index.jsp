@@ -128,10 +128,54 @@ String basePath = request.getScheme() + "://" + request.getServerName() + ":" + 
 		//页面加载完毕,刷新页面
 		pageList(1, 2);
 
+		//为删除按钮绑定事件，执行删除操作
+        $("#deleteBtn").click(function () {
+
+            if(confirm("确定要删除吗？")){
+
+                var $ids = $("input[name=dx]:checked");
+                var param ="";
+                for (i=0; i<$ids.length; i++){
+
+                    param += "id="+$($ids[i]).val();
+
+                    if(i<$ids.length-1){
+
+                        param += "&";
+                    }
+                }
+                //alert(param);
+
+                $.ajax({
+                    url : "workbench/clue/delete.do",
+                    data : param,
+                    type : "post",
+                    dataType : "json",
+                    success : function (result) {
+
+                        //result {"success": true/false}
+
+                        if(result){
+
+                            pageList(1, $("#cluePage").bs_pagination('getOption', 'rowsPerPage'));
+                        }else{
+
+                            alert("删除线索活动失败");
+                        }
+
+                    }
+                })
+            }
+
+        })
+
 	});
 
 	//刷新线索活动列表方法
 	function pageList(pageNo, pageSize){
+
+	    //取消复选框全选√
+        $("#qx").prop("checked", false);
 
 		$("#search-fullname").val($.trim($("#hidden-fullname").val()));
 		$("#search-company").val($.trim($("#hidden-company").val()));
@@ -166,7 +210,7 @@ String basePath = request.getScheme() + "://" + request.getServerName() + ":" + 
 
 				    html += '<tr>'
 					html += '<td><input name="dx" type="checkbox" value="'+n.id+'"/></td> '
-					html += '<td><a style="text-decoration: none; cursor: pointer;" onclick="window.location.href=\'workbench/clue/detail.jsp\';">'+n.fullname+'</a></td>'
+					html += '<td><a style="text-decoration: none; cursor: pointer;" onclick="window.location.href=\'workbench/clue/detail.do?id='+n.id+'\';">'+n.fullname+'</a></td>'
 					html += '<td>'+n.company+'</td>'
 					html += '<td>'+n.phone+'</td>'
 					html += '<td>'+n.mphone+'</td>'
